@@ -1,19 +1,44 @@
+const studentForm = document.querySelector("[data-hook='student-form']");
+const tbody = document.querySelector("tbody");
 
-  const form = document.querySelector("[data-hook='student-form']");
-  const tbody = document.querySelector("tbody");
+// Main object to manage students
+const StudentManager = {
+  students: JSON.parse(localStorage.getItem("students")) || [],
 
-  // Get existing students from localStorage or start empty
-  let students = JSON.parse(localStorage.getItem("students")) || [];
+  // Auto-generate ID
+  getNextId() {
+    if (this.students.length === 0) return 1;
+    return Math.max(...this.students.map(s => Number(s.id))) + 1;
+  },
 
-  // Determine studentCounter based on existing students
-  let studentCounter = students.length > 0 
-    ? Math.max(...students.map(s => Number(s.id))) + 1 
-    : 1;
+  // Add new student
+  addStudent({ name, age, email, grades }) {
+    const id = String(this.getNextId()).padStart(3, "0");
+    const gradesArray = grades.split(",").map(g => Number(g.trim()));
+    const average = (gradesArray.reduce((a,b)=>a+b,0) / gradesArray.length).toFixed(1);
 
-  // Function to render table rows
-  function renderTable() {
-    tbody.innerHTML = ""; // clear table
-    students.forEach(student => {
+    const student = { id, name, age, email, grades: gradesArray, average };
+    this.students.push(student);
+    this.save();
+    this.renderTable();
+  },
+
+  // Delete student by ID
+  deleteStudent(id) {
+    this.students = this.students.filter(s => s.id !== id);
+    this.save();
+    this.renderTable();
+  },
+
+  // Save to localStorage
+  save() {
+    localStorage.setItem("students", JSON.stringify(this.students));
+  },
+
+  // Render table rows
+  renderTable() {
+    tbody.innerHTML = "";
+    this.students.forEach(student => {
       const row = document.createElement("tr");
       row.className = "border-t";
       row.dataset.id = student.id;
@@ -35,52 +60,27 @@
       tbody.appendChild(row);
     });
   }
+};
 
-  // Initial render on page load
-  renderTable();
+// Initial render
+StudentManager.renderTable();
 
-  // Add student
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
+// Handle form submit
+studentForm.addEventListener("submit", function(e){
+  e.preventDefault();
+  const name = studentForm.name.value;
+  const age = studentForm.age.value;
+  const email = studentForm.email.value;
+  const grades = studentForm.grades.value;
 
-    const id = String(studentCounter).padStart(3, "0"); // 001, 002...
-    studentCounter++;
+  StudentManager.addStudent({ name, age, email, grades });
+  studentForm.reset();
+});
 
-    const name = form.name.value;
-    const age = form.age.value;
-    const email = form.email.value;
-    const gradesInput = form.grades.value;
-    const grades = gradesInput.split(",").map(num => Number(num.trim()));
-    const average = (grades.reduce((a, b) => a + b, 0) / grades.length).toFixed(1);
-
-    // Add student to array
-    const student = { id, name, age, email, grades, average };
-    students.push(student);
-
-    // Save to localStorage
-    localStorage.setItem("students", JSON.stringify(students));
-
-    // Re-render table
-    renderTable();
-
-    // Reset form
-    form.reset();
-  });
-
-  // Delete student
-  tbody.addEventListener("click", function(e) {
-    if (e.target.dataset.hook === "delete") {
-      const row = e.target.closest("tr");
-      const studentId = row.dataset.id;
-
-      // Remove from array
-      students = students.filter(s => s.id !== studentId);
-
-      // Update localStorage
-      localStorage.setItem("students", JSON.stringify(students));
-
-      // Re-render table
-      renderTable();
-    }
-  });
-
+// Handle delete button using event delegation
+tbody.addEventListener("click", function(e){
+  if(e.target.dataset.hook === "delete"){
+    const row = e.target.closest("tr");
+    StudentManager.deleteStudent(row.dataset.id);
+  }
+});
