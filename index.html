@@ -3,23 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Student Management - UI (Tailwind)</title>
+  <title>Student Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!--
-    No JavaScript in this file — it's a static UI built with Tailwind.
-    Add your JS later. Where useful, I added data-* attributes as hooks for your scripts.
-  -->
+
 </head>
 <body class="bg-gray-50 text-gray-800">
-  <header class="bg-white shadow-sm">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-      <h1 class="text-2xl font-semibold">Student Management</h1>
-      <nav class="space-x-3 text-sm text-gray-600">
-        <button class="px-3 py-1 rounded-md hover:bg-gray-100">Dashboard</button>
-        <button class="px-3 py-1 rounded-md hover:bg-gray-100">Students</button>
-      </nav>
-    </div>
-  </header>
 
   <main class="max-w-6xl mx-auto px-4 py-8">
     <!-- Controls -->
@@ -27,8 +15,8 @@
       <div class="flex-1 flex gap-3">
         <div class="flex items-center bg-white rounded-md shadow-sm px-3">
           <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          <!-- search input (no JS) -->
-          <input id="search" data-hook="search" class="outline-none px-2 py-2 w-64" placeholder="Search by name or email..." />
+          <!-- search  -->
+          <input id="search" data-hook="search" class="outline-none px-2 py-2 w-64" placeholder="Search by ID..." />
         </div>
 
        
@@ -40,13 +28,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Students list / table -->
       <section class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="bg-white rounded-lg mb-12 shadow-sm overflow-hidden">
           <div class="p-4 border-b">
-            <h2 class="font-medium">Students</h2>
-            <p class="text-sm text-gray-500">List of all students stored in the system.</p>
+            <h1 class="font-medium mb-6"> List of all Students</h1>
+            <p class="text-sm text-gray-500">Manage your students. Click "Add / Edit Student" to add a new student or edit an existing one.</p>
           </div>
 
-          <div class="p-4">
+          <div class="p-4 mt-8">
             <div class="overflow-x-auto">
               <table class="min-w-full text-left table-auto">
                 <thead class="text-sm text-gray-600 bg-gray-50">

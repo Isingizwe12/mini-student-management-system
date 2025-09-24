@@ -1,11 +1,11 @@
 const studentForm = document.querySelector("[data-hook='student-form']");
 const tbody = document.querySelector("tbody");
+const searchInput = document.querySelector("[data-hook='search']");
 
-// Main object to manage students
 const StudentManager = {
   students: JSON.parse(localStorage.getItem("students")) || [],
 
-  // Auto-generate ID
+  // Auto-generate next ID
   getNextId() {
     if (this.students.length === 0) return 1;
     return Math.max(...this.students.map(s => Number(s.id))) + 1;
@@ -15,7 +15,7 @@ const StudentManager = {
   addStudent({ name, age, email, grades }) {
     const id = String(this.getNextId()).padStart(3, "0");
     const gradesArray = grades.split(",").map(g => Number(g.trim()));
-    const average = (gradesArray.reduce((a,b)=>a+b,0) / gradesArray.length).toFixed(1);
+    const average = (gradesArray.reduce((a,b)=>a+b,0)/gradesArray.length).toFixed(1);
 
     const student = { id, name, age, email, grades: gradesArray, average };
     this.students.push(student);
@@ -23,9 +23,32 @@ const StudentManager = {
     this.renderTable();
   },
 
-  // Delete student by ID
+  // Delete student
   deleteStudent(id) {
     this.students = this.students.filter(s => s.id !== id);
+    this.save();
+    this.renderTable();
+  },
+
+  // Find student by ID
+  findStudent(id) {
+    return this.students.find(s => s.id === id);
+  },
+
+  // Update student
+  updateStudent(id, { name, age, email, grades }) {
+    const student = this.findStudent(id);
+    if (!student) return;
+
+    if (name !== undefined) student.name = name;
+    if (age !== undefined) student.age = age;
+    if (email !== undefined) student.email = email;
+    if (grades !== undefined) {
+      const gradesArray = grades.split(",").map(g => Number(g.trim()));
+      student.grades = gradesArray;
+      student.average = (gradesArray.reduce((a,b)=>a+b,0)/gradesArray.length).toFixed(1);
+    }
+
     this.save();
     this.renderTable();
   },
@@ -35,10 +58,12 @@ const StudentManager = {
     localStorage.setItem("students", JSON.stringify(this.students));
   },
 
-  // Render table rows
-  renderTable() {
+  // Render table
+  renderTable(filteredStudents = null) {
+    const data = filteredStudents || this.students;
     tbody.innerHTML = "";
-    this.students.forEach(student => {
+
+    data.forEach(student => {
       const row = document.createElement("tr");
       row.className = "border-t";
       row.dataset.id = student.id;
@@ -51,7 +76,6 @@ const StudentManager = {
         <td class="px-4 py-3">${student.average}</td>
         <td class="px-4 py-3">
           <div class="flex gap-2">
-            <button class="text-sm px-2 py-1 border rounded" data-hook="view">View</button>
             <button class="text-sm px-2 py-1 border rounded" data-hook="edit">Edit</button>
             <button class="text-sm px-2 py-1 border rounded text-red-600" data-hook="delete">Delete</button>
           </div>
@@ -65,7 +89,7 @@ const StudentManager = {
 // Initial render
 StudentManager.renderTable();
 
-// Handle form submit
+// Handle form submit (Add/Edit)
 studentForm.addEventListener("submit", function(e){
   e.preventDefault();
   const name = studentForm.name.value;
@@ -73,14 +97,50 @@ studentForm.addEventListener("submit", function(e){
   const email = studentForm.email.value;
   const grades = studentForm.grades.value;
 
-  StudentManager.addStudent({ name, age, email, grades });
+  const editingId = studentForm.dataset.editingId;
+  if (editingId) {
+    StudentManager.updateStudent(editingId, { name, age, email, grades });
+    delete studentForm.dataset.editingId;
+  } else {
+    StudentManager.addStudent({ name, age, email, grades });
+  }
+
   studentForm.reset();
 });
 
-// Handle delete button using event delegation
+// Handle table buttons (Edit/Delete)
 tbody.addEventListener("click", function(e){
+  const row = e.target.closest("tr");
+  const studentId = row.dataset.id;
+
   if(e.target.dataset.hook === "delete"){
-    const row = e.target.closest("tr");
-    StudentManager.deleteStudent(row.dataset.id);
+    StudentManager.deleteStudent(studentId);
+  }
+
+  if(e.target.dataset.hook === "edit"){
+    const student = StudentManager.findStudent(studentId);
+    if (!student) return;
+
+    studentForm.name.value = student.name;
+    studentForm.age.value = student.age;
+    studentForm.email.value = student.email;
+    studentForm.grades.value = student.grades.join(", ");
+    studentForm.dataset.editingId = studentId;
+  }
+});
+
+// Handle search by ID
+searchInput.addEventListener("input", function(){
+  const query = this.value.trim();
+  if (!query) {
+    StudentManager.renderTable();
+    return;
+  }
+
+  const student = StudentManager.findStudent(query);
+  if (student) {
+    StudentManager.renderTable([student]);
+  } else {
+    StudentManager.renderTable([]);
   }
 });
